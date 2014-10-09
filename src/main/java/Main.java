@@ -1,6 +1,6 @@
 import encoding.DetectionResult;
 import encoding.ParallelDetector;
-import encoding.automaton.AutomatonR;
+import encoding.automaton.Automaton;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -16,13 +16,13 @@ public class Main {
     }
 
     private static void test() throws IOException {
-        List<AutomatonR> automata = new LinkedList<>();
-        automata.add(new AutomatonR(StandardCharsets.UTF_8));
-        automata.add(new AutomatonR(StandardCharsets.US_ASCII));
-        automata.add(new AutomatonR(StandardCharsets.ISO_8859_1));
-        automata.add(new AutomatonR(StandardCharsets.UTF_16));
-        automata.add(new AutomatonR(StandardCharsets.UTF_16BE));
-        automata.add(new AutomatonR(StandardCharsets.UTF_16LE));
+        List<Automaton> automata = new LinkedList<>();
+        automata.add(new Automaton(StandardCharsets.UTF_8));
+        automata.add(new Automaton(StandardCharsets.US_ASCII));
+        automata.add(new Automaton(StandardCharsets.ISO_8859_1));
+        automata.add(new Automaton(StandardCharsets.UTF_16));
+        automata.add(new Automaton(StandardCharsets.UTF_16BE));
+        automata.add(new Automaton(StandardCharsets.UTF_16LE));
         ParallelDetector detector = new ParallelDetector(automata);
         String hpIso = "/home/mrx/hpIso";
         parallelDetect(hpIso, detector);

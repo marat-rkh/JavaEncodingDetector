@@ -6,28 +6,28 @@ import java.nio.charset.Charset;
 /**
  * Created by mrx on 09.10.14.
  */
-public class AutomatonR {
-    private final ValidatorR validatorR;
-    private final ControlsCounterR controlsCounterR = new ControlsCounterR();
+public class Automaton {
+    private final Validator validator;
+    private final ControlsCounter controlsCounter = new ControlsCounter();
     private final Charset charset;
 
     private State state = State.OK;
 
-    public AutomatonR(Charset charset) {
+    public Automaton(Charset charset) {
         this.charset = charset;
-        this.validatorR = new ValidatorR(charset);
+        this.validator = new Validator(charset);
     }
 
     public void feed(ByteBuffer bytes, boolean isEnd) {
         if(!state.equals(State.ERROR)) {
-            char[] decodedChars = validatorR.feed(bytes, isEnd);
-            if(validatorR.getState().equals(ValidatorR.State.ERROR)) {
+            char[] decodedChars = validator.feed(bytes, isEnd);
+            if(validator.getState().equals(Validator.State.ERROR)) {
                 state = State.ERROR;
                 return;
             }
-            controlsCounterR.feed(decodedChars);
+            controlsCounter.feed(decodedChars);
             if(isEnd) {
-                assert(!controlsCounterR.hasPrev());
+                assert(!controlsCounter.hasPrev());
             }
         }
     }
@@ -37,7 +37,7 @@ public class AutomatonR {
     }
 
     public double getConfidence() {
-        return 1 - controlsCounterR.getPercentage();
+        return 1 - controlsCounter.getPercentage();
     }
 
     public Charset getCharset() {
@@ -45,8 +45,8 @@ public class AutomatonR {
     }
 
     public void reset() {
-        validatorR.reset();
-        controlsCounterR.reset();
+        validator.reset();
+        controlsCounter.reset();
         state = State.OK;
     }
 

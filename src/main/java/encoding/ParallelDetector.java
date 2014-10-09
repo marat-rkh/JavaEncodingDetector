@@ -1,6 +1,6 @@
 package encoding;
 
-import encoding.automaton.AutomatonR;
+import encoding.automaton.Automaton;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -15,12 +15,14 @@ import java.util.List;
  * Created by mrx on 08.10.14.
  */
 public class ParallelDetector {
-    private final List<AutomatonR> automata;
-    private List<AutomatonR> workingCopy;
+    private final List<Automaton> automata;
+    private List<Automaton> workingCopy;
 
     private final ByteBuffer bytes = ByteBuffer.allocateDirect(2 * 1024);
 
-    public ParallelDetector(List<AutomatonR> automata) throws FileNotFoundException {
+    private final double CONFIDENCE_THRESHOLD = 0.95;
+
+    public ParallelDetector(List<Automaton> automata) throws FileNotFoundException {
         this.automata = automata;
     }
 
@@ -31,18 +33,15 @@ public class ParallelDetector {
         try {
             inChannel = new FileInputStream(filePath).getChannel();
             while(inChannel.read(bytes) != -1) {
-                feedAutomata(bytes, false);
-                if (workingCopy.size() == 0) {
+                if(!doAutomataIteration(false)) {
                     return null;
                 }
-                bytes.clear();
             }
-            feedAutomata(bytes, true);
-            if (workingCopy.size() == 0) {
+            if(!doAutomataIteration(true)) {
                 return null;
             }
-            AutomatonR bestFit = bestFitAutomaton();
-            return new DetectionResult(bestFit.getCharset(), bestFit.getConfidence());
+            Automaton bestFit = bestFitAutomaton();
+            return bestFit == null ? null : new DetectionResult(bestFit.getCharset(), bestFit.getConfidence());
         } finally {
             if(inChannel != null) {
                 inChannel.close();
@@ -50,28 +49,40 @@ public class ParallelDetector {
         }
     }
 
-    private void feedAutomata(ByteBuffer bytes, boolean isEnd) {
-        Iterator<AutomatonR> it = workingCopy.iterator();
+    private boolean doAutomataIteration(boolean isEnd) {
+        feedAutomata(isEnd);
+        if (workingCopy.size() == 0) {
+            return false;
+        }
+        bytes.clear();
+        return true;
+    }
+
+    private void feedAutomata(boolean isEnd) {
+        Iterator<Automaton> it = workingCopy.iterator();
         bytes.flip();
         while (it.hasNext()) {
-            AutomatonR automaton = it.next();
+            Automaton automaton = it.next();
             automaton.feed(bytes, isEnd);
-            if(automaton.getState().equals(AutomatonR.State.ERROR)) {
+            if(automaton.getState().equals(Automaton.State.ERROR)) {
                 it.remove();
             }
             bytes.rewind();
         }
     }
 
-    private AutomatonR bestFitAutomaton() {
+    private Automaton bestFitAutomaton() {
         if(automata.size() != 0) {
-            Iterator<AutomatonR> it = workingCopy.iterator();
-            AutomatonR best = it.next();
+            Iterator<Automaton> it = workingCopy.iterator();
+            Automaton best = it.next();
             while (it.hasNext()) {
-                AutomatonR current = it.next();
+                Automaton current = it.next();
                 if(current.getConfidence() > best.getConfidence()) {
                     best = current;
                 }
+            }
+            if(best.getConfidence() < CONFIDENCE_THRESHOLD) {
+                return null;
             }
             return best;
         }
@@ -79,18 +90,9 @@ public class ParallelDetector {
     }
 
     private void reset() {
-        for(AutomatonR e : automata) {
+        for(Automaton e : automata) {
             e.reset();
         }
         bytes.clear();
     }
-//
-//    public static ByteBuffer clone(ByteBuffer original) {
-//        ByteBuffer clone = ByteBuffer.allocate(original.capacity());
-//        original.rewind();//copy from the beginning
-//        clone.put(original);
-//        original.rewind();
-//        clone.flip();
-//        return clone;
-//    }
 }

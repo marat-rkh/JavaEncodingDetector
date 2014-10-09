@@ -3,7 +3,7 @@ package encoding.automaton;
 /**
  * Created by mrx on 09.10.14.
  */
-public class ControlsCounterR {
+public class ControlsCounter {
     private char prev;
     private boolean hasPrev = false;
 

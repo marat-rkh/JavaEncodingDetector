@@ -9,7 +9,7 @@ import java.nio.charset.CoderResult;
 /**
  * Created by mrx on 09.10.14.
  */
-public class ValidatorR {
+public class Validator {
     private final ByteBuffer localBuffer = ByteBuffer.allocate(4 * 1024);
     private final byte[] exchangeBuffer = new byte[2 * 1024];
     private final CharsetDecoder decoder;
@@ -18,7 +18,7 @@ public class ValidatorR {
 
     private State state = State.OK;
 
-    public ValidatorR(Charset charset) {
+    public Validator(Charset charset) {
         decoder = charset.newDecoder();
     }
 
