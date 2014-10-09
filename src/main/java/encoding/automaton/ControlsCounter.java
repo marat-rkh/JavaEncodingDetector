@@ -6,6 +6,7 @@ package encoding.automaton;
 public class ControlsCounter {
     private char prev;
     private boolean hasPrev = false;
+    private char[] convertingBuffer = new char[2];
 
     private int allChars = 0;
     private int controlsNum = 0;
@@ -19,7 +20,10 @@ public class ControlsCounter {
             hasPrev = false;
         }
         for(; i < chars.length; i++) {
-            if(Character.isHighSurrogate(chars[i])) {
+            if(!Character.isHighSurrogate(chars[i])) {
+                convertingBuffer[0] = chars[i];
+                count(Character.codePointAt(convertingBuffer, 0));
+            } else {
                 if(i != chars.length - 1) {
                     count(codePointForPair(chars[i], chars[i + 1]));
                     i += 1;
@@ -27,9 +31,6 @@ public class ControlsCounter {
                     hasPrev = true;
                     prev = chars[i];
                 }
-            } else {
-                char[] singleChar = new char[] {chars[i]};
-                count(Character.codePointAt(singleChar, 0));
             }
         }
     }
@@ -50,8 +51,9 @@ public class ControlsCounter {
 
     private int codePointForPair(char fst, char snd) {
         assert(!Character.isHighSurrogate(snd));
-        char[] pair = new char[]{fst, snd};
-        return Character.codePointAt(pair, 0);
+        convertingBuffer[0] = fst;
+        convertingBuffer[1] = snd;
+        return Character.codePointAt(convertingBuffer, 0);
     }
 
     private void count(int codePoint) {
