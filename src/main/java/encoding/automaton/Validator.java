@@ -24,42 +24,44 @@ public class Validator {
 
     public char[] feed(ByteBuffer bytes, boolean isEnd) {
         if(!state.equals(State.ERROR)) {
-            int availableBytes = bytes.remaining();
-            bytes.get(exchangeBuffer, 0, availableBytes);
-            localBuffer.put(exchangeBuffer, 0, availableBytes);
-            localBuffer.flip();
-            if (!isEnd) {
-                CoderResult result = decoder.decode(localBuffer, chars, false);
-                if (result.isError()) {
-                    state = State.ERROR;
-                    return null;
-                }
-                chars.flip();
-                int offs = chars.position();
-                int len = chars.remaining();
-                char[] decodedChars = new char[len];
-                System.arraycopy(array, offs, decodedChars, 0, len);
-                chars.clear();
-                localBuffer.compact();
-                return decodedChars;
-            } else {
-                CoderResult result = decoder.decode(localBuffer, chars, true);
-                if(result.isError()) {
-                    state = State.ERROR;
-                    return null;
-                }
-                decoder.flush(chars);
-                chars.flip();
-                int offs = chars.position();
-                int len = chars.remaining();
-                char[] decodedChars = new char[len];
-                System.arraycopy(array, offs, decodedChars, 0, len);
-                chars.clear();
-                localBuffer.compact();
-                return decodedChars;
+            putToLocalBuffer(bytes);
+            if(!decode(isEnd)) {
+                return null;
             }
+            char[] decodedChars = getDecodedChars();
+            localBuffer.compact();
+            return decodedChars;
         }
         return null;
+    }
+
+    private boolean decode(boolean isEnd) {
+        CoderResult result = decoder.decode(localBuffer, chars, isEnd);
+        if (result.isError()) {
+            state = State.ERROR;
+            return false;
+        }
+        if(isEnd) {
+            decoder.flush(chars);
+        }
+        return true;
+    }
+
+    private char[] getDecodedChars() {
+        chars.flip();
+        int offs = chars.position();
+        int len = chars.remaining();
+        char[] decodedChars = new char[len];
+        System.arraycopy(array, offs, decodedChars, 0, len);
+        chars.clear();
+        return decodedChars;
+    }
+
+    private void putToLocalBuffer(ByteBuffer bytes) {
+        int availableBytes = bytes.remaining();
+        bytes.get(exchangeBuffer, 0, availableBytes);
+        localBuffer.put(exchangeBuffer, 0, availableBytes);
+        localBuffer.flip();
     }
 
     public void reset() {
