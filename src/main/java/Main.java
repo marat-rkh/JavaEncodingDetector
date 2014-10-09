@@ -1,11 +1,7 @@
 import encoding.DetectionResult;
 import encoding.ParallelDetector;
-import encoding.automaton.Automaton;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Created by mrx on 09.10.14.
@@ -16,14 +12,7 @@ public class Main {
     }
 
     private static void test() throws IOException {
-        List<Automaton> automata = new LinkedList<>();
-        automata.add(new Automaton(StandardCharsets.UTF_8));
-        automata.add(new Automaton(StandardCharsets.US_ASCII));
-        automata.add(new Automaton(StandardCharsets.ISO_8859_1));
-        automata.add(new Automaton(StandardCharsets.UTF_16));
-        automata.add(new Automaton(StandardCharsets.UTF_16BE));
-        automata.add(new Automaton(StandardCharsets.UTF_16LE));
-        ParallelDetector detector = new ParallelDetector(automata);
+        ParallelDetector detector = ParallelDetector.standardDetector();
         String hpIso = "/home/mrx/hpIso";
         parallelDetect(hpIso, detector);
         String hpAnsi = "/home/mrx/hpAnsi";

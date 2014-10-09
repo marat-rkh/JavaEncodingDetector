@@ -10,16 +10,20 @@ import java.nio.charset.CoderResult;
  * Created by mrx on 09.10.14.
  */
 public class Validator {
-    private final ByteBuffer localBuffer = ByteBuffer.allocate(4 * 1024);
-    private final byte[] exchangeBuffer = new byte[2 * 1024];
     private final CharsetDecoder decoder;
-    private final CharBuffer chars = CharBuffer.allocate(2 * 1024);
-    private final char[] array = chars.array();
+    private final ByteBuffer localBuffer;
+    private final byte[] exchangeBuffer;
+    private final CharBuffer chars;
+    private final char[] array;
 
     private State state = State.OK;
 
-    public Validator(Charset charset) {
+    public Validator(Charset charset, int bytesBufferSize) {
         decoder = charset.newDecoder();
+        localBuffer = ByteBuffer.allocate(2 * bytesBufferSize);
+        exchangeBuffer = new byte[bytesBufferSize];
+        chars = CharBuffer.allocate(bytesBufferSize);
+        array = chars.array();
     }
 
     public char[] feed(ByteBuffer bytes, boolean isEnd) {

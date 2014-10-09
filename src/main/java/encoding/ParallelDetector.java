@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,12 +19,13 @@ public class ParallelDetector {
     private final List<Automaton> automata;
     private List<Automaton> workingCopy;
 
-    private final ByteBuffer bytes = ByteBuffer.allocateDirect(2 * 1024);
+    private final ByteBuffer bytes;
 
     private final double CONFIDENCE_THRESHOLD = 0.95;
 
-    public ParallelDetector(List<Automaton> automata) throws FileNotFoundException {
+    private ParallelDetector(List<Automaton> automata, int readPortionSize) throws FileNotFoundException {
         this.automata = automata;
+        this.bytes = ByteBuffer.allocateDirect(readPortionSize);
     }
 
     public DetectionResult detect(String filePath) throws IOException {
@@ -94,5 +96,17 @@ public class ParallelDetector {
             e.reset();
         }
         bytes.clear();
+    }
+
+    public static ParallelDetector standardDetector() throws FileNotFoundException {
+        int readPortionSize = 2 * 1024;
+        List<Automaton> automata = new LinkedList<>();
+        automata.add(new Automaton(StandardCharsets.UTF_8, readPortionSize));
+        automata.add(new Automaton(StandardCharsets.US_ASCII, readPortionSize));
+        automata.add(new Automaton(StandardCharsets.ISO_8859_1, readPortionSize));
+        automata.add(new Automaton(StandardCharsets.UTF_16, readPortionSize));
+        automata.add(new Automaton(StandardCharsets.UTF_16BE, readPortionSize));
+        automata.add(new Automaton(StandardCharsets.UTF_16LE, readPortionSize));
+        return new ParallelDetector(automata, readPortionSize);
     }
 }

@@ -13,9 +13,9 @@ public class Automaton {
 
     private State state = State.OK;
 
-    public Automaton(Charset charset) {
+    public Automaton(Charset charset, int bytesBufferSize) {
         this.charset = charset;
-        this.validator = new Validator(charset);
+        this.validator = new Validator(charset, bytesBufferSize);
     }
 
     public void feed(ByteBuffer bytes, boolean isEnd) {
